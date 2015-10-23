@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.ellipsoft.DungeonDelver.Engine.Game;
 import com.ellipsoft.DungeonDelver.Entity.Entity;
 import com.ellipsoft.DungeonDelver.Entity.Enemies.Ogre;
 import com.ellipsoft.DungeonDelver.SceneManager;
@@ -14,7 +15,6 @@ import java.util.Iterator;
 import java.util.List;
 
 public class Grid extends Actor {
-	static final String LOG_TAG = "Grid";
 	int width = SceneManager.GAME_WIDTH / 100;
 	int height = SceneManager.GAME_HEIGHT / 100;
 	public static int xOffSet = (SceneManager.GAME_WIDTH % 100) / 2;
@@ -97,6 +97,11 @@ public class Grid extends Actor {
 		int y = (int) Math.floor(screenY);
 		int index = (x / 100) + width * (y / 100);
 
+		/* dummy signal to end game */
+		if (player.hp <= 0) {
+			return false;
+		}
+
 		/* Verification */
 		if (index >= area) {
 			return false;
@@ -104,17 +109,26 @@ public class Grid extends Actor {
 		if (!checkAdjacency(index)) {
 			return false;
 		}
+
+		/* Interaction with Game entities */
 		if (spaceOccupied(index)) {
 			Entity other  = cells[index].getActor();
 			Gdx.app.log("GRID", "enemy encountered! " + other.type);
 			if (player.interactWith(other)) {
 				// following should be done in interactWith()
-				removeActor(other);
+				if (other.hp <= 0){
+					removeActor(other); // Victory!
+					Game.levelUp(player);
+				}
+				if (player.hp <= 0){
+					removeActor(player); // game over
+				}
 			}
 			return false;
 		}
-		moveActor(player, index);
 
+		/* Space is valid & empty */
+		moveActor(player, index);
 		return true;
 	}
 

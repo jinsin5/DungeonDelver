@@ -1,29 +1,49 @@
 package com.ellipsoft.DungeonDelver.Entity;
 
-import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
+
+import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.ellipsoft.DungeonDelver.Engine.Game;
 
 public class Player extends Entity {
 
 	public Player() {
 		type = "Player";
 		texture = new Texture("hero.png");
-		for (String s : base_stats) {
+		for (String s : attributes) {
 			stats.put(s, randInt(12, 15));
 		}
+		for (String s : parameters) {
+			if (s.equals("Def")) {stats.put(s, 5);}
+			if (s.equals("Atk")) {stats.put(s, 90);}
+		}
+		max_hp = hp = 10;
 	}
 
 	@Override
 	public boolean interactWith(Entity e) {
 		super.interactWith(e);
 		if (e.type == "Enemy") {
-			Gdx.app.log("PLAYER", "player strength " + stats.get("Str"));
-			Gdx.app.log("PLAYER", "enemy strength " + e.stats.get("Str"));
-			if (stats.get("Str") <= e.stats.get("Str")){
-				return false;
+			/* attacker goes first */
+			Game.fight(e, this);
+			if (e.hp <= 0) {
+				return true;
 			}
+			/* defender retaliates */
+			Game.fight(this, e);
+			if (this.hp <=0) {
+				return true;
+			}
+			return false;
 		}
 		return true;
 	}
 
+	@Override
+	public void draw(Batch batch, float parentAlpha) {
+		BitmapFont font = new BitmapFont();
+		font.draw(batch, "HP: " + hp, position[0], position[1]);
+		super.draw(batch, parentAlpha);
+	}
 }

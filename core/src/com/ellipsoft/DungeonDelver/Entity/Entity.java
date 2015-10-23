@@ -13,24 +13,21 @@ import java.util.concurrent.ThreadLocalRandom;
 public class Entity extends Actor {
 	float[] size = { 100.0f, 100.0f };
 	public float[] position = { (float) Grid.xOffSet, (float) Grid.yOffSet };
-	public String[] base_stats = {"Str", "Int", "Con", "Dex", "Wis", "Luck"};
+	public String[] attributes = {"Str", "Int", "Con", "Dex", "Wis", "Luck"};
+	public String[] parameters = {"Def", "Atk"};
 	public Map<String, Integer> stats = new HashMap<String, Integer>();
 	int current_index = 0;
 	public String type = "";
 	public Texture texture;
+	public int hp = 0;
+	public int max_hp = 0;
 
 	public void setPos(float x, float y) {
 		position[0] = x;
 		position[1] = y;
 	}
 
-	public void setPos(float[] pos) {
-		position = pos;
-	}
-
-	public float[] getPos() {
-		return position;
-	}
+	public void setPos(float[] pos) { position = pos; }
 
 	public void setIndex(int index) {
 		current_index = index;
