@@ -1,19 +1,29 @@
 package com.ellipsoft.DungeonDelver.Scenes;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.ellipsoft.DungeonDelver.Entity.Entity;
+import com.ellipsoft.DungeonDelver.Entity.Enemies.Ogre;
 import com.ellipsoft.DungeonDelver.SceneManager;
 import com.ellipsoft.DungeonDelver.Entity.Player;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 public class Grid extends Actor {
+	static final String LOG_TAG = "Grid";
 	int width = SceneManager.GAME_WIDTH / 100;
 	int height = SceneManager.GAME_HEIGHT / 100;
-	int xOffSet = (SceneManager.GAME_WIDTH % 100) / 2;
-	int yOffSet = (SceneManager.GAME_HEIGHT % 100) / 2;
+	public static int xOffSet = (SceneManager.GAME_WIDTH % 100) / 2;
+	public static int yOffSet = (SceneManager.GAME_HEIGHT % 100) / 2;
 	int area = width*height;
 	Cell[] cells = new Cell[area];
 	Player player = new Player();
+	List<Entity> enemies = new ArrayList<Entity>();
+	int player_index = 0;
 	Texture background = new Texture("background.jpg");
 
 	public Grid() {
@@ -21,17 +31,29 @@ public class Grid extends Actor {
 			cells[i] = new Cell((i % width * 100) + xOffSet,
 								(i / width * 100) + yOffSet);
 		}
+		for (int i = 0; i < 5; i++) {
+			int rand = Entity.randInt(0, area);
+			Entity enemy = new Ogre(cells[rand].getPos());
+			enemies.add(enemy);
+			enemy.setIndex(rand); //should all be done in init
+			cells[rand].setActor(enemy);
+		}
 		reset();
 	}
 
 	public boolean checkAdjacency(int index) {
-		int[] indicies = getAdjacent(index);
+		int[] indices = getAdjacent();
+		for (int i : indices) {
+			if (index == i) {
+				return true;
+			}
+		}
 		return false;
 	}
 
-	public int[] getAdjacent(int index) {
-		int[] indices  = {index + 1, index - 1, index + width, index - width};
-		return indices;
+	public int[] getAdjacent() {
+		player_index = player.getIndex();
+		return new int[] {player_index + 1, player_index - 1, player_index + width, player_index - width};
 	}
 
 	public synchronized void reset() {
@@ -41,6 +63,33 @@ public class Grid extends Actor {
 	@Override
 	public void act(float delta) {
 		super.act(delta);
+	}
+
+	public boolean spaceOccupied(int index) {
+		if (cells[index].getActor() != null) {
+			return true;
+		}
+		return false;
+	}
+
+	public void moveActor(Entity a, int index){
+		int current_index = a.getIndex();
+		float[] newPlayerPos = cells[index].getPos();
+
+		cells[current_index].removeActor();
+		cells[index].setActor(a);
+		a.setPos(newPlayerPos);
+		a.setIndex(index);
+	}
+
+	public void removeActor(Entity a){
+		cells[a.getIndex()].removeActor();
+		for (Iterator<Entity> iter = enemies.iterator(); iter.hasNext(); ) {
+			Entity e = iter.next();
+			if (e.getIndex() == a.getIndex()) {
+				iter.remove();
+			}
+		}
 	}
 
 	public boolean touchDown(float screenX, float screenY, int pointer, int button) {
@@ -55,8 +104,17 @@ public class Grid extends Actor {
 		if (!checkAdjacency(index)) {
 			return false;
 		}
-		float[] newPlayerPos = cells[index].getPos();
-		player.setPos(newPlayerPos);
+		if (spaceOccupied(index)) {
+			Entity other  = cells[index].getActor();
+			Gdx.app.log("GRID", "enemy encountered! " + other.type);
+			if (player.interactWith(other)) {
+				// following should be done in interactWith()
+				removeActor(other);
+			}
+			return false;
+		}
+		moveActor(player, index);
+
 		return true;
 	}
 
@@ -66,6 +124,10 @@ public class Grid extends Actor {
 
 		for (Cell c: cells) {
 			c.draw(batch, parentAlpha);
+		}
+
+		for (Entity e: enemies) {
+			e.draw(batch, parentAlpha);
 		}
 
 		player.draw(batch, parentAlpha);
