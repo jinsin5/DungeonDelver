@@ -16,9 +16,7 @@ public class Cell extends Actor {
 		position[1] = y;
 	}
 
-	public float[] getPos() {
-		return position;
-	}
+	public float[] getPos() { return position; }
 
 	public void setActor(Entity a){
 		actor = a;

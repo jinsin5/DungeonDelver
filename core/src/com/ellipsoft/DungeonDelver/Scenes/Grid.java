@@ -3,27 +3,53 @@ package com.ellipsoft.DungeonDelver.Scenes;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
-import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.ellipsoft.DungeonDelver.Engine.Game;
 import com.ellipsoft.DungeonDelver.Entity.Entity;
 import com.ellipsoft.DungeonDelver.Entity.Enemies.Ogre;
-import com.ellipsoft.DungeonDelver.SceneManager;
 import com.ellipsoft.DungeonDelver.Entity.Player;
+import com.ellipsoft.DungeonDelver.Entity.Stairs;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class Grid extends Actor {
-	int width = SceneManager.GAME_WIDTH / 100;
-	int height = SceneManager.GAME_HEIGHT / 100;
-	public static int xOffSet = (SceneManager.GAME_WIDTH % 100) / 2;
-	public static int yOffSet = (SceneManager.GAME_HEIGHT % 100) / 2;
-	int area = width*height;
-	Cell[] cells = new Cell[area];
-	Player player = new Player();
+public class Grid extends BaseScene {
+	private List<EventListener> eventListeners = new ArrayList<EventListener>();
+
+	public interface EventListener {
+		enum EventType {
+			RETURN_HOME, MAIN_MENU
+		}
+
+		void event(EventType eventType);
+	}
+
+	private void triggerEvent(EventListener.EventType eventType) {
+		for (EventListener listener : eventListeners) {
+			listener.event(eventType);
+		}
+	}
+
+	public void setEventListener(EventListener listener) {
+		eventListeners.add(listener);
+	}
+
+	//Sizing initialization
+	public static int width = 10;
+	public static int height = 10;
+	public static int xOffSet = 5;
+	public static int yOffSet = 5;
+	public static int area = width*height;
+
+	//Gamespace Initialization
+	public static Cell[] cells = new Cell[area];
 	List<Entity> enemies = new ArrayList<Entity>();
+	List<Entity> objects = new ArrayList<Entity>();
+
+	// Player Initialization
+	Player player = new Player();
 	int player_index = 0;
+
 	Texture background = new Texture("background.jpg");
 
 	public Grid() {
@@ -32,17 +58,34 @@ public class Grid extends Actor {
 								(i / width * 100) + yOffSet);
 		}
 		for (int i = 0; i < 5; i++) {
-			int rand = Entity.randInt(0, area);
-			Entity enemy = new Ogre(cells[rand].getPos());
-			enemies.add(enemy);
-			enemy.setIndex(rand); //should all be done in init
-			cells[rand].setActor(enemy);
+			Entity Ogre = new Ogre();
+			enemies.add(Ogre);
 		}
-		reset();
+		Entity Stair = new Stairs();
+		objects.add(Stair);
+	}
+
+	public synchronized void reset() {
+		enemies.clear();
+		objects.clear();
+
+		for (int i = 0; i < area; i++) {
+			Entity actor = cells[i].getActor();
+			if (actor != null && actor.type != "player"){
+				cells[i].removeActor();
+			}
+		}
+
+		for (int i = 0; i < 5; i++) {
+			Entity Ogre = new Ogre();
+			enemies.add(Ogre);
+		}
+		Entity Stair = new Stairs();
+		objects.add(Stair);
 	}
 
 	public boolean checkAdjacency(int index) {
-		int[] indices = getAdjacent();
+		List<Integer> indices = getAdjacent();
 		for (int i : indices) {
 			if (index == i) {
 				return true;
@@ -51,13 +94,22 @@ public class Grid extends Actor {
 		return false;
 	}
 
-	public int[] getAdjacent() {
+	public List<Integer> getAdjacent() {
 		player_index = player.getIndex();
-		return new int[] {player_index + 1, player_index - 1, player_index + width, player_index - width};
-	}
-
-	public synchronized void reset() {
-		player.reset();
+		List<Integer> adj = new ArrayList<Integer>();
+		if ((player_index + 1) / width == player_index / width){
+			adj.add(player_index + 1);
+		}
+		if ((player_index - 1) / width == player_index / width){
+			adj.add(player_index - 1);
+		}
+		if ((player_index + width <= area)){
+			adj.add(player_index + width);
+		}
+		if ((player_index - width) > 0){
+			adj.add(player_index - width);
+		}
+		return adj;
 	}
 
 	@Override
@@ -66,10 +118,24 @@ public class Grid extends Actor {
 	}
 
 	public boolean spaceOccupied(int index) {
-		if (cells[index].getActor() != null) {
-			return true;
+		// False implies empty space and the actor will traverse to it
+		Entity actor = cells[index].getActor();
+		if (actor == null){
+			return false;
 		}
-		return false;
+		Gdx.app.log("GRID", "enemy encountered! " + actor.type);
+
+		if (actor.type.equals("stairs")){
+			reset();
+			return false;
+		}
+
+		if (actor.type.equals("townportal")){
+			triggerEvent(EventListener.EventType.RETURN_HOME);
+			return false;
+		}
+
+		return true;
 	}
 
 	public void moveActor(Entity a, int index){
@@ -113,7 +179,6 @@ public class Grid extends Actor {
 		/* Interaction with Game entities */
 		if (spaceOccupied(index)) {
 			Entity other  = cells[index].getActor();
-			Gdx.app.log("GRID", "enemy encountered! " + other.type);
 			if (player.interactWith(other)) {
 				// following should be done in interactWith()
 				if (other.hp <= 0){
@@ -122,6 +187,7 @@ public class Grid extends Actor {
 				}
 				if (player.hp <= 0){
 					removeActor(player); // game over
+					triggerEvent(EventListener.EventType.MAIN_MENU);
 				}
 			}
 			return false;
@@ -142,6 +208,10 @@ public class Grid extends Actor {
 
 		for (Entity e: enemies) {
 			e.draw(batch, parentAlpha);
+		}
+
+		for (Entity o: objects){
+			o.draw(batch, parentAlpha);
 		}
 
 		player.draw(batch, parentAlpha);

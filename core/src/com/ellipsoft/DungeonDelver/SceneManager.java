@@ -6,6 +6,8 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.scenes.scene2d.Group;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.ellipsoft.DungeonDelver.Scenes.BaseScene;
+import com.ellipsoft.DungeonDelver.Scenes.MainMenu;
 import com.ellipsoft.DungeonDelver.Scenes.Grid;
 
 
@@ -14,10 +16,12 @@ public class SceneManager extends Stage implements InputProcessor {
 	public static final int GAME_HEIGHT = 1080;
 	private OrthographicCamera camera;
 	private Group group;
-	private Grid currentScene;
 	Vector3 downPoint = new Vector3();
 	long downTime = 0;
 
+	private BaseScene currentScene;
+	private Grid GameScene = new Grid();
+	private MainMenu mainMenu = new MainMenu();
 
 	@Override
 	public void draw() {
@@ -30,8 +34,37 @@ public class SceneManager extends Stage implements InputProcessor {
 		camera.update();
 		getViewport().setCamera(camera);
 		group = new Group();
-		loadGameScene();
 
+		/* main scene event handler */
+		mainMenu.setEventListener(new MainMenu.EventListener() {
+			@Override
+			public void event(EventType eventType) {
+				if (eventType == EventType.START_GAME) {
+					loadGameScene();
+				}
+			}
+		});
+
+		/* game scene event handler */
+		GameScene.setEventListener(new Grid.EventListener() {
+			@Override
+			public void event(EventType eventType) {
+				if (eventType == EventType.RETURN_HOME) {
+					returnHome();
+				}
+				if (eventType == EventType.MAIN_MENU){
+					loadMainMenu();
+				}
+			}
+		});
+
+		loadMainMenu();
+	}
+
+	public synchronized void loadMainMenu() {
+		group.clear();
+		currentScene = mainMenu;
+		group.addActor(currentScene);
 	}
 
 	public synchronized void loadGameScene() {
@@ -44,6 +77,18 @@ public class SceneManager extends Stage implements InputProcessor {
 		group.addActor(currentScene);
 		addActor(group);
 	}
+
+	public void returnHome(){
+		loadMainMenu();
+		//save progress
+	}
+
+	/*
+	public void descendLevel(){
+		Gdx.app.log("SCENEMANAGER", "descending a level!");
+		currentScene.reset();
+	}
+	*/
 
 	public synchronized void resize(int width, int height) {
 		camera.viewportWidth = width;
@@ -62,4 +107,10 @@ public class SceneManager extends Stage implements InputProcessor {
 		return currentScene.touchDown(clickPoint.x, clickPoint.y, pointer, button);
 	}
 
+	@Override
+	public boolean touchUp(int screenX, int screenY, int pointer, int button) {
+		Vector3 clickPoint = camera.unproject(new Vector3(screenX, screenY, 0));
+
+		return currentScene.touchUp(clickPoint.x, clickPoint.y, pointer, button);
+	}
 }

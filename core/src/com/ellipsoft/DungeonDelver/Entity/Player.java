@@ -9,10 +9,10 @@ import com.ellipsoft.DungeonDelver.Engine.Game;
 public class Player extends Entity {
 
 	public Player() {
-		type = "Player";
+		type = "player";
 		texture = new Texture("hero.png");
 		for (String s : attributes) {
-			stats.put(s, randInt(12, 15));
+			stats.put(s, Game.randInt(12, 15));
 		}
 		for (String s : parameters) {
 			if (s.equals("Def")) {stats.put(s, 5);}
@@ -23,8 +23,7 @@ public class Player extends Entity {
 
 	@Override
 	public boolean interactWith(Entity e) {
-		super.interactWith(e);
-		if (e.type == "Enemy") {
+		if (e.type == "enemy") {
 			/* attacker goes first */
 			Game.fight(e, this);
 			if (e.hp <= 0) {
@@ -35,6 +34,9 @@ public class Player extends Entity {
 			if (this.hp <=0) {
 				return true;
 			}
+			return false;
+		}
+		if (e.type == "stairs") {
 			return false;
 		}
 		return true;

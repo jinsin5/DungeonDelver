@@ -8,10 +8,9 @@ import com.ellipsoft.DungeonDelver.Scenes.Grid;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class Entity extends Actor {
-	float[] size = { 100.0f, 100.0f };
+	public float[] size = { 100.0f, 100.0f };
 	public float[] position = { (float) Grid.xOffSet, (float) Grid.yOffSet };
 	public String[] attributes = {"Str", "Int", "Con", "Dex", "Wis", "Luck"};
 	public String[] parameters = {"Def", "Atk"};
@@ -33,6 +32,11 @@ public class Entity extends Actor {
 		current_index = index;
 	}
 
+	public void setSize(int x, int y){
+		size[0] = (float)x;
+		size[1] = (float)y;
+	}
+
 	public int getIndex(){
 		return current_index;
 	}
@@ -44,10 +48,6 @@ public class Entity extends Actor {
 	public void reset() {
 		position[0] = (float) Grid.xOffSet;
 		position[1] = (float) Grid.yOffSet;
-	}
-
-	public static int randInt(int min, int max) {
-		return ThreadLocalRandom.current().nextInt(min, max + 1);
 	}
 
 	@Override

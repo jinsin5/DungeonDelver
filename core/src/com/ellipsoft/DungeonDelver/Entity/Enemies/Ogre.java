@@ -3,27 +3,32 @@ package com.ellipsoft.DungeonDelver.Entity.Enemies;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.ellipsoft.DungeonDelver.Entity.Entity;
+import com.ellipsoft.DungeonDelver.Engine.Game;
+import com.ellipsoft.DungeonDelver.Scenes.Grid;
 
 
+public class Ogre extends Enemy{
 
-public class Ogre extends Entity{
+	public Ogre() {
+		super();
+		int rand = Game.randInt(1, Grid.area - 1);
+		Grid.cells[rand].setActor(this);
+		setIndex(rand);
+		position = Grid.cells[rand].getPos();
 
-	public Ogre(float[] pos) {
-		//texture = new Texture("Ogre.png");
-		texture = new Texture("hero.png");
+		texture = new Texture("ogre.png");
 		type = "Enemy";
-		position = pos;
+		sub_type = "Ogre";
 		max_hp = hp = 25;
 		for (String s : attributes) {
 			if (s.equals("Str")){
-				stats.put(s, randInt(12, 15));
+				stats.put(s, Game.randInt(12, 15));
 			}
 			else if (s.equals("Int")){
-				stats.put(s, randInt(5, 8));
+				stats.put(s, Game.randInt(5, 8));
 			}
 			else{
-				stats.put(s, randInt(8, 12));
+				stats.put(s, Game.randInt(8, 12));
 			}
 		}
 		for (String s : parameters) {
