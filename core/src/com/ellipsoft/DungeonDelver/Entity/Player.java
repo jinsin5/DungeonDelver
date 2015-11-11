@@ -21,6 +21,7 @@ public class Player extends Entity {
 		max_hp = hp = 10;
 	}
 
+
 	@Override
 	public boolean interactWith(Entity e) {
 		if (e.type == "enemy") {

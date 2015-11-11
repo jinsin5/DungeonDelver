@@ -3,11 +3,14 @@ package com.ellipsoft.DungeonDelver.Scenes;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
+import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.ellipsoft.DungeonDelver.Engine.Game;
 import com.ellipsoft.DungeonDelver.Entity.Entity;
 import com.ellipsoft.DungeonDelver.Entity.Enemies.Ogre;
 import com.ellipsoft.DungeonDelver.Entity.Player;
 import com.ellipsoft.DungeonDelver.Entity.Stairs;
+import com.ellipsoft.DungeonDelver.UI.Statistics;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -35,20 +38,23 @@ public class Grid extends BaseScene {
 	}
 
 	//Sizing initialization
-	public static int width = 10;
-	public static int height = 10;
+	protected int width = 10;
+	protected int height = 10;
 	public static int xOffSet = 5;
 	public static int yOffSet = 5;
-	public static int area = width*height;
+	protected int area = width*height;
 
 	//Gamespace Initialization
-	public static Cell[] cells = new Cell[area];
+	protected Cell[] cells = new Cell[area];
 	List<Entity> enemies = new ArrayList<Entity>();
 	List<Entity> objects = new ArrayList<Entity>();
+	//List<Table> ui_elements = new ArrayList<Table>();
 
 	// Player Initialization
 	Player player = new Player();
 	int player_index = 0;
+
+	Statistics stats = new Statistics(player);
 
 	Texture background = new Texture("background.jpg");
 
@@ -58,10 +64,10 @@ public class Grid extends BaseScene {
 								(i / width * 100) + yOffSet);
 		}
 		for (int i = 0; i < 5; i++) {
-			Entity Ogre = new Ogre();
+			Entity Ogre = new Ogre(cells, area);
 			enemies.add(Ogre);
 		}
-		Entity Stair = new Stairs();
+		Entity Stair = new Stairs(cells, area);
 		objects.add(Stair);
 	}
 
@@ -77,14 +83,14 @@ public class Grid extends BaseScene {
 		}
 
 		for (int i = 0; i < 5; i++) {
-			Entity Ogre = new Ogre();
+			Entity Ogre = new Ogre(cells, area);
 			enemies.add(Ogre);
 		}
-		Entity Stair = new Stairs();
+		Entity Stair = new Stairs(cells, area);
 		objects.add(Stair);
 	}
 
-	public boolean checkAdjacency(int index) {
+		public boolean checkAdjacency(int index) {
 		List<Integer> indices = getAdjacent();
 		for (int i : indices) {
 			if (index == i) {
@@ -178,15 +184,15 @@ public class Grid extends BaseScene {
 
 		/* Interaction with Game entities */
 		if (spaceOccupied(index)) {
-			Entity other  = cells[index].getActor();
+			Entity other = cells[index].getActor();
 			if (player.interactWith(other)) {
 				// following should be done in interactWith()
 				if (other.hp <= 0){
 					removeActor(other); // Victory!
 					Game.levelUp(player);
+					stats.update(player);
 				}
 				if (player.hp <= 0){
-					removeActor(player); // game over
 					triggerEvent(EventListener.EventType.MAIN_MENU);
 				}
 			}
@@ -213,6 +219,13 @@ public class Grid extends BaseScene {
 		for (Entity o: objects){
 			o.draw(batch, parentAlpha);
 		}
+
+		stats.draw(batch, parentAlpha);
+		/*
+		for (Actor ui: ui_elements){
+			ui.draw(batch, parentAlpha);
+		}
+		*/
 
 		player.draw(batch, parentAlpha);
 	}
