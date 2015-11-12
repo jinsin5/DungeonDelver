@@ -3,13 +3,12 @@ package com.ellipsoft.DungeonDelver.Scenes;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
-import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.ellipsoft.DungeonDelver.Engine.Game;
 import com.ellipsoft.DungeonDelver.Entity.Entity;
 import com.ellipsoft.DungeonDelver.Entity.Enemies.Ogre;
 import com.ellipsoft.DungeonDelver.Entity.Player;
 import com.ellipsoft.DungeonDelver.Entity.Stairs;
+import com.ellipsoft.DungeonDelver.UI.CombatLog;
 import com.ellipsoft.DungeonDelver.UI.Statistics;
 
 import java.util.ArrayList;
@@ -17,8 +16,6 @@ import java.util.Iterator;
 import java.util.List;
 
 public class Grid extends BaseScene {
-	private List<EventListener> eventListeners = new ArrayList<EventListener>();
-
 	public interface EventListener {
 		enum EventType {
 			RETURN_HOME, MAIN_MENU
@@ -37,6 +34,8 @@ public class Grid extends BaseScene {
 		eventListeners.add(listener);
 	}
 
+	private List<EventListener> eventListeners = new ArrayList<EventListener>();
+
 	//Sizing initialization
 	protected int width = 10;
 	protected int height = 10;
@@ -51,9 +50,11 @@ public class Grid extends BaseScene {
 	//List<Table> ui_elements = new ArrayList<Table>();
 
 	// Player Initialization
-	Player player = new Player();
+	CombatLog cLog = new CombatLog();
+	Player player = new Player(cLog);
 	int player_index = 0;
 
+	// UI Initialization
 	Statistics stats = new Statistics(player);
 
 	Texture background = new Texture("background.jpg");
@@ -77,7 +78,7 @@ public class Grid extends BaseScene {
 
 		for (int i = 0; i < area; i++) {
 			Entity actor = cells[i].getActor();
-			if (actor != null && actor.type != "player"){
+			if (actor != null && !actor.type.equals("player")){
 				cells[i].removeActor();
 			}
 		}
@@ -129,7 +130,6 @@ public class Grid extends BaseScene {
 		if (actor == null){
 			return false;
 		}
-		Gdx.app.log("GRID", "enemy encountered! " + actor.type);
 
 		if (actor.type.equals("stairs")){
 			reset();
@@ -169,11 +169,6 @@ public class Grid extends BaseScene {
 		int y = (int) Math.floor(screenY);
 		int index = (x / 100) + width * (y / 100);
 
-		/* dummy signal to end game */
-		if (player.hp <= 0) {
-			return false;
-		}
-
 		/* Verification */
 		if (index >= area) {
 			return false;
@@ -189,7 +184,7 @@ public class Grid extends BaseScene {
 				// following should be done in interactWith()
 				if (other.hp <= 0){
 					removeActor(other); // Victory!
-					Game.levelUp(player);
+					Game.levelUp(player, cLog);
 					stats.update(player);
 				}
 				if (player.hp <= 0){
@@ -221,6 +216,7 @@ public class Grid extends BaseScene {
 		}
 
 		stats.draw(batch, parentAlpha);
+		cLog.draw(batch, parentAlpha);
 		/*
 		for (Actor ui: ui_elements){
 			ui.draw(batch, parentAlpha);

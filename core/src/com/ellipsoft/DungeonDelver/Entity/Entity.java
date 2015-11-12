@@ -31,9 +31,15 @@ public class Entity extends Actor {
 		current_index = index;
 	}
 
-	public void setSize(int x, int y){
+
+	public void _setSize(int x, int y){
 		size[0] = (float)x;
 		size[1] = (float)y;
+	}
+
+	public void _setSize(float x, float y){
+		size[0] = x;
+		size[1] = y;
 	}
 
 	public int getStat(String stat){

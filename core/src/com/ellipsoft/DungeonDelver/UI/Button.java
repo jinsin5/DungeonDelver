@@ -13,7 +13,7 @@ public class Button extends Entity{
 
 	public Button(Texture new_texture) {
 		texture = new_texture;
-		setSize(100, 100);
+		_setSize(100.0f, 100.0f);
 		setPos(SceneManager.GAME_WIDTH / 2, SceneManager.GAME_HEIGHT / 2);
 	}
 

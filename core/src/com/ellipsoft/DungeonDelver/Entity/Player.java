@@ -5,10 +5,13 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.ellipsoft.DungeonDelver.Engine.Game;
+import com.ellipsoft.DungeonDelver.UI.CombatLog;
 
 public class Player extends Entity {
+	CombatLog cLog;
 
-	public Player() {
+	public Player(CombatLog cLog_) {
+		cLog = cLog_;
 		type = "player";
 		texture = new Texture("hero.png");
 		for (String s : attributes) {
@@ -24,20 +27,20 @@ public class Player extends Entity {
 
 	@Override
 	public boolean interactWith(Entity e) {
-		if (e.type == "enemy") {
+		if (e.type.equals("enemy")) {
 			/* attacker goes first */
-			Game.fight(e, this);
+			Game.fight(e, this, cLog);
 			if (e.hp <= 0) {
 				return true;
 			}
 			/* defender retaliates */
-			Game.fight(this, e);
+			Game.fight(this, e, cLog);
 			if (this.hp <=0) {
 				return true;
 			}
 			return false;
 		}
-		if (e.type == "stairs") {
+		if (e.type.equals("stairs")) {
 			return false;
 		}
 		return true;
