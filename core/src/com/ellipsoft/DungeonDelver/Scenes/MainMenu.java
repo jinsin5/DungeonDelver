@@ -29,11 +29,12 @@ public class MainMenu extends BaseScene {
 	private List<EventListener> eventListeners = new ArrayList<EventListener>();
 
 	private Button[] buttons = new Button[1];
-	Texture background = new Texture("background.jpg");
+	Texture background;
 
 	public MainMenu(){
-		Texture button_texture = new Texture("hero.png");
-		Button button = new Button(button_texture);
+		background = new Texture("background.jpg");
+
+		Button button = new Button(new Texture("hero.png"));
 		button.setAction(new Button.Action(){
 			@Override
 			public void action() {
@@ -43,14 +44,13 @@ public class MainMenu extends BaseScene {
 		buttons[0] = button;
 	}
 
-
 	@Override
 	public void draw(Batch batch, float parentAlpha) {
+		batch.draw(background, 0.0f, 0.0f, 1920.0f, 1080.0f);
+
 		for (Button b : buttons) {
 			b.draw(batch, parentAlpha);
 		}
-		batch.draw(background, 0.0f, 0.0f, 1920.0f, 1080.0f);
-
 	}
 
 	@Override

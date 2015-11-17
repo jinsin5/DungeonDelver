@@ -56,4 +56,8 @@ public class Game {
 	public static int randInt(int min, int max) {
 		return ThreadLocalRandom.current().nextInt(min, max + 1);
 	}
+
+	public static int randInt(int max) {
+		return ThreadLocalRandom.current().nextInt(0, max + 1);
+	}
 }

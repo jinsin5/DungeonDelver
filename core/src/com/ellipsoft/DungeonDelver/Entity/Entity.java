@@ -3,6 +3,7 @@ package com.ellipsoft.DungeonDelver.Entity;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.scenes.scene2d.Actor;
+import com.ellipsoft.DungeonDelver.Engine.Maze;
 import com.ellipsoft.DungeonDelver.Scenes.Grid;
 
 import java.util.HashMap;
@@ -31,6 +32,25 @@ public class Entity extends Actor {
 		current_index = index;
 	}
 
+	public int getDirection(float x, float y){
+		int direction = -1;
+		/* direction means the edge of the cell that the player
+		*  will be entering through, eg: direction = N means
+		*  player will be moving south */
+		if (y <= position[1]){
+			direction = Maze.N;
+		}
+		else if (x <= position[0]){
+			direction = Maze.E;
+		}
+		else if (y >= (position[1] + size[1])){
+			direction = Maze.S;
+		}
+		else if (x >= (position[0] + size[0])){
+			direction = Maze.W;
+		}
+		return direction;
+	}
 
 	public void _setSize(int x, int y){
 		size[0] = (float)x;
@@ -56,6 +76,7 @@ public class Entity extends Actor {
 
 	@Override
 	public void draw(Batch batch, float parentAlpha) {
-		batch.draw(texture, position[0], position[1], size[0], size[1]);
+		batch.draw(texture, position[0], position[1],
+							size[0] * getScaleX(), size[1] * getScaleY());
 	}
 }

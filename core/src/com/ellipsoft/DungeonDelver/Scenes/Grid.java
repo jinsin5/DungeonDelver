@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.ellipsoft.DungeonDelver.Engine.Game;
+import com.ellipsoft.DungeonDelver.Engine.Maze;
 import com.ellipsoft.DungeonDelver.Entity.Entity;
 import com.ellipsoft.DungeonDelver.Entity.Enemies.Ogre;
 import com.ellipsoft.DungeonDelver.Entity.Player;
@@ -47,6 +48,7 @@ public class Grid extends BaseScene {
 	protected Cell[] cells = new Cell[area];
 	List<Entity> enemies = new ArrayList<Entity>();
 	List<Entity> objects = new ArrayList<Entity>();
+	Maze maze;
 	//List<Table> ui_elements = new ArrayList<Table>();
 
 	// Player Initialization
@@ -70,9 +72,15 @@ public class Grid extends BaseScene {
 		}
 		Entity Stair = new Stairs(cells, area);
 		objects.add(Stair);
+		Maze.generateMaze(this);
 	}
 
 	public synchronized void reset() {
+		descend();
+		player = new Player(cLog);
+	}
+
+	public synchronized void descend() {
 		enemies.clear();
 		objects.clear();
 
@@ -81,6 +89,7 @@ public class Grid extends BaseScene {
 			if (actor != null && !actor.type.equals("player")){
 				cells[i].removeActor();
 			}
+			cells[i].resetWall();
 		}
 
 		for (int i = 0; i < 5; i++) {
@@ -89,9 +98,10 @@ public class Grid extends BaseScene {
 		}
 		Entity Stair = new Stairs(cells, area);
 		objects.add(Stair);
+		Maze.generateMaze(this);
 	}
 
-		public boolean checkAdjacency(int index) {
+	public boolean checkAdjacency(int index) {
 		List<Integer> indices = getAdjacent();
 		for (int i : indices) {
 			if (index == i) {
@@ -99,6 +109,15 @@ public class Grid extends BaseScene {
 			}
 		}
 		return false;
+	}
+
+	public boolean checkCollision(int index, int direction){
+		Cell cell = cells[index];
+		int wall = cell.getWall();
+		cell = cells[player.getIndex()];
+		int current_wall = cell.getWall();
+		return (((wall / direction) % 2) == 1) &&
+				(((current_wall / Maze.OPPOSITE(direction)) % 2) == 1);
 	}
 
 	public List<Integer> getAdjacent() {
@@ -119,6 +138,16 @@ public class Grid extends BaseScene {
 		return adj;
 	}
 
+	public int _getWidth(){
+		return width;
+	}
+
+	public int _getHeight(){
+		return height;
+	}
+
+	public int _getArea() { return area; }
+
 	@Override
 	public void act(float delta) {
 		super.act(delta);
@@ -132,7 +161,7 @@ public class Grid extends BaseScene {
 		}
 
 		if (actor.type.equals("stairs")){
-			reset();
+			descend();
 			return false;
 		}
 
@@ -164,16 +193,27 @@ public class Grid extends BaseScene {
 		}
 	}
 
+	public void setCellWall(int x, int y, int wall){
+		cells[x + (width * y)].setWall(wall);
+	}
+
+	public int getCellWall(int x, int y) { return cells[x + (width * y)].getWall(); }
+
 	public boolean touchDown(float screenX, float screenY, int pointer, int button) {
 		int x = (int) Math.floor(screenX);
 		int y = (int) Math.floor(screenY);
 		int index = (x / 100) + width * (y / 100);
+		int direction = player.getDirection(screenX, screenY);
 
 		/* Verification */
 		if (index >= area) {
 			return false;
 		}
 		if (!checkAdjacency(index)) {
+			return false;
+		}
+
+		if (!checkCollision(index, direction)){
 			return false;
 		}
 
@@ -202,6 +242,10 @@ public class Grid extends BaseScene {
 	@Override
 	public void draw(Batch batch, float parentAlpha) {
 		batch.draw(background, 0.0f, 0.0f, 1920.0f, 1080.0f);
+
+		for (Cell c: cells) {
+			c.draw_bg(batch, parentAlpha);
+		}
 
 		for (Cell c: cells) {
 			c.draw(batch, parentAlpha);

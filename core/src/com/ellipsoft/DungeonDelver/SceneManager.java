@@ -20,7 +20,7 @@ public class SceneManager extends Stage implements InputProcessor {
 	long downTime = 0;
 
 	private BaseScene currentScene;
-	private Grid GameScene = new Grid();
+	private Grid gameScene = new Grid();
 	private MainMenu mainMenu = new MainMenu();
 
 	@Override
@@ -46,7 +46,7 @@ public class SceneManager extends Stage implements InputProcessor {
 		});
 
 		/* game scene event handler */
-		GameScene.setEventListener(new Grid.EventListener() {
+		gameScene.setEventListener(new Grid.EventListener() {
 			@Override
 			public void event(EventType eventType) {
 				if (eventType == EventType.RETURN_HOME) {
@@ -62,17 +62,21 @@ public class SceneManager extends Stage implements InputProcessor {
 	}
 
 	public synchronized void loadMainMenu() {
+		clear();
 		group.clear();
+
 		currentScene = mainMenu;
+
 		group.addActor(currentScene);
+		addActor(group);
 	}
 
 	public synchronized void loadGameScene() {
 		clear();
 		group.clear();
 
-		Grid scene = new Grid();
-		currentScene = scene;
+		currentScene = gameScene;
+		currentScene.reset();
 
 		group.addActor(currentScene);
 		addActor(group);
